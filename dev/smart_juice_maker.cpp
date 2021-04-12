@@ -90,7 +90,7 @@ public:
     static int id;
     double calories;
     double quantity;
-    const string preparationDate = Helpers::currentDateTime();
+    string preparationDate;
     std::vector<string> vitamins;
     std::vector<string> fruits;
 };
@@ -109,6 +109,15 @@ void from_json(const json &json, FruitCalories &fruitCalories)
 {
     json.at("fruit").get_to(fruitCalories.name);
     json.at("calories").get_to(fruitCalories.calories);
+}
+
+void from_json(const json &json, Juice &juice)
+{
+     json.at("id").get_to(juice.id);
+     json.at("quantity").get_to(juice.quantity);
+     json.at("calories").get_to(juice.calories);
+     json.at("preparationDate").get_to(juice.preparationDate);
+     json.at("fruits").get_to(juice.fruits);
 }
 
 // to_json overloading
@@ -144,6 +153,7 @@ namespace Generic
         Juice::id++;
         newJuice.quantity = 0;
         newJuice.calories = 0;
+        newJuice.preparationDate = Helpers::currentDateTime();
         for (auto fruitClient : clientFruits)
         {
             for (auto fruitCal : fruitCalories)
@@ -159,6 +169,15 @@ namespace Generic
 
         json juice(newJuice);
 
+        std::ifstream juiceHistory(juiceHistoryDB);
+        json juiceHistoryJson = json::parse(juiceHistory);
+        std::vector<Juice> juices = juiceHistoryJson.get<std::vector<Juice>>();
+
+        juices.push_back(newJuice);
+        json juicesJson = juices;
+
+        std::ofstream out(juiceHistoryDB);
+        out << juicesJson;
         response.send(Http::Code::Ok, juice.dump());
     }
 }
