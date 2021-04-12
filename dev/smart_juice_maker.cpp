@@ -1,7 +1,8 @@
 /*
-   Rares Cristea, 12.03.2021
-   Example of a REST endpoint with routing
-   using Mathieu Stefani's example, 07 février 2016
+  using Mathieu Stefani's example, 07 février 2016
+  Rares Cristea, 12.03.2021
+  Smart Juice Maker Project
+   
 */
 
 #include <algorithm>
@@ -22,14 +23,39 @@
 #include <string>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
+#include <nlohmann/json.hpp>
+#include <chrono>
+#include <ctime>
 
 #include <signal.h>
 
 using namespace std;
 using namespace Pistache;
+using json = nlohmann::json;
 
+// Declare all helper files
+const std::string caloriesFile = "fruits_calories.txt";
+const std::string vitaminsFile = "fruits_vitamins.txt";
+const std::string juiceHistoryDB = "juices.txt";
+
+// Helper class
+class Helpers
+{
+public:
+    const static std::string currentDateTime();
+};
+
+const std::string Helpers::currentDateTime()
+{
+    time_t now = time(0);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
 // General advice: pay atetntion to the namespaces that you use in various contexts. Could prevent headaches.
-
 // This is just a helper function to preety-print the Cookies that one of the enpoints shall receive.
 void printCookies(const Http::Request &req)
 {
@@ -43,6 +69,59 @@ void printCookies(const Http::Request &req)
     std::cout << "]" << std::endl;
 }
 
+class FruitCalories
+{
+public:
+    std::string name;
+    double calories;
+};
+
+class Fruit
+{
+public:
+    std::string name;
+    double quantity;
+    std::vector<string> vitamins;
+};
+
+class Juice
+{
+public:
+    static int id;
+    double calories;
+    double quantity;
+    const string preparationDate = Helpers::currentDateTime();
+    std::vector<string> vitamins;
+    std::vector<string> fruits;
+};
+
+// TODO: get the number of juice form juices.txt
+int Juice::id = 0;
+
+// from_json overloading
+void from_json(const json &json, Fruit &fruit)
+{
+    json.at("fruit").get_to(fruit.name);
+    json.at("quantity").get_to(fruit.quantity);
+}
+
+void from_json(const json &json, FruitCalories &fruitCalories)
+{
+    json.at("fruit").get_to(fruitCalories.name);
+    json.at("calories").get_to(fruitCalories.calories);
+}
+
+// to_json overloading
+void to_json(json &j, const Juice &juice)
+{
+    j = json{
+        {"id", juice.id},
+        {"calories", juice.calories},
+        {"quantity", juice.quantity},
+        {"preparationDate", juice.preparationDate},
+        {"fruits", juice.fruits}};
+}
+
 // Some generic namespace, with a simple function we could use to test the creation of the endpoints.
 namespace Generic
 {
@@ -50,13 +129,45 @@ namespace Generic
     {
         response.send(Http::Code::Ok, "1");
     }
+
+    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        // from client
+        auto clientJson = nlohmann::json::parse(request.body());
+        auto clientFruits = clientJson.get<std::vector<Fruit>>();
+
+        std::ifstream read(caloriesFile);
+        json in = json::parse(read);
+        auto fruitCalories = in.get<std::vector<FruitCalories>>();
+
+        Juice newJuice;
+        Juice::id++;
+        newJuice.quantity = 0;
+        newJuice.calories = 0;
+        for (auto fruitClient : clientFruits)
+        {
+            for (auto fruitCal : fruitCalories)
+            {
+                if (fruitClient.name == fruitCal.name)
+                {
+                    newJuice.fruits.push_back(fruitClient.name);
+                    newJuice.quantity += fruitClient.quantity;
+                    newJuice.calories += (fruitCal.calories * fruitClient.quantity) / 100;
+                }
+            }
+        }
+
+        json juice(newJuice);
+
+        response.send(Http::Code::Ok, juice.dump());
+    }
 }
 
-// Definition of the MicrowaveEnpoint class
-class MicrowaveEndpoint
+// Definition of the SmartJuiceMakerEndpoint class
+class SmartJuiceMakerEndpoint
 {
 public:
-    explicit MicrowaveEndpoint(Address addr)
+    explicit SmartJuiceMakerEndpoint(Address addr)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     {
     }
@@ -91,9 +202,10 @@ private:
         // Defining various endpoints
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called.
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Get(router, "/auth", Routes::bind(&MicrowaveEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&MicrowaveEndpoint::setSetting, this));
-        Routes::Get(router, "/settings/:settingName/", Routes::bind(&MicrowaveEndpoint::getSetting, this));
+        Routes::Post(router, "/makeJuice", Routes::bind(&Generic::makeJuice));
+        Routes::Get(router, "/auth", Routes::bind(&SmartJuiceMakerEndpoint::doAuth, this));
+        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&SmartJuiceMakerEndpoint::setSetting, this));
+        Routes::Get(router, "/settings/:settingName/", Routes::bind(&SmartJuiceMakerEndpoint::getSetting, this));
     }
 
     void doAuth(const Rest::Request &request, Http::ResponseWriter response)
@@ -107,7 +219,7 @@ private:
         response.send(Http::Code::Ok);
     }
 
-    // Endpoint to configure one of the Microwave's settings.
+    // Endpoint to configure one of the SmartJuiceMaker's settings.
     void setSetting(const Rest::Request &request, Http::ResponseWriter response)
     {
         // You don't know what the parameter content that you receive is, but you should
@@ -115,7 +227,7 @@ private:
         auto settingName = request.param(":settingName").as<std::string>();
 
         // This is a guard that prevents editing the same value by two concurent threads.
-        Guard guard(microwaveLock);
+        Guard guard(smartJuiceMakerLock);
 
         string val = "";
         if (request.hasParam(":value"))
@@ -124,8 +236,8 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
-        int setResponse = mwv.set(settingName, val);
+        // Setting the smart juice maker's setting to value
+        int setResponse = sjm.set(settingName, val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1)
@@ -138,14 +250,14 @@ private:
         }
     }
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the SmartJuiceMaker
     void getSetting(const Rest::Request &request, Http::ResponseWriter response)
     {
         auto settingName = request.param(":settingName").as<std::string>();
 
-        Guard guard(microwaveLock);
+        Guard guard(smartJuiceMakerLock);
 
-        string valueSetting = mwv.get(settingName);
+        string valueSetting = sjm.get(settingName);
 
         if (valueSetting != "")
         {
@@ -164,11 +276,11 @@ private:
         }
     }
 
-    // Defining the class of the Microwave. It should model the entire configuration of the Microwave
-    class Microwave
+    // Defining the class of the SmartJuiceMaker. It should model the entire configuration of the SmartJuiceMaker
+    class SmartJuiceMaker
     {
     public:
-        explicit Microwave() {}
+        explicit SmartJuiceMaker() {}
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
         int set(std::string name, std::string value)
@@ -215,10 +327,10 @@ private:
     // Create the lock which prevents concurrent editing of the same variable
     using Lock = std::mutex;
     using Guard = std::lock_guard<Lock>;
-    Lock microwaveLock;
+    Lock smartJuiceMakerLock;
 
-    // Instance of the microwave model
-    Microwave mwv;
+    // Instance of the smart juice maker model
+    SmartJuiceMaker sjm;
 
     // Defining the httpEndpoint and a router.
     std::shared_ptr<Http::Endpoint> httpEndpoint;
@@ -256,7 +368,7 @@ int main(int argc, char *argv[])
     cout << "Using " << thr << " threads" << endl;
 
     // Instance of the class that defines what the server can do.
-    MicrowaveEndpoint stats(addr);
+    SmartJuiceMakerEndpoint stats(addr);
 
     // Initialize and start the server
     stats.init(thr);

@@ -1,0 +1,13 @@
+Functionalitati 
+Mentiuni
+In fruits_calories.txt pastram caloriile pe care le are fruct (cal/100g).
+1. Se primeste ca input un json cu o lista de fructe si cantitatile asociate sub forma
+(acesta ar fi output-ul dat de cantarul aparutului prin senzorul depozitului):
+[
+{"fruit": "apple", "quantity": "150"},
+{"fruit": "cranberries", "quantity":"200"},
+{"fruit": "beet", "quantity":"100"},
+{"fruit": "lemon", "quantity":"50"}
+]
+
+Il consideram mai departe ca input pentru preparea sucului.
