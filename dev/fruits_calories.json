@@ -10,6 +10,7 @@
     "fruit": "cherries",
     "calories": 50
   },
+
   {
     "fruit": "grapes",
     "calories": 67
@@ -101,8 +102,18 @@
   {
     "fruit": "pomegranate",
     "calories": 68
+  }
+  ,
+  { "fruit": "cantaloupe",
+  "calories": 33.7
   },
-  {
-    "fruit": "beet", 
-    "calories": 43
-  }]
+  { "fruit": "papaya",
+  "calories": 42.8
+  },
+  { "fruit": "carrot",
+  "calories": 41.3
+  },
+  {"fruit": "salad",
+  "calories": 17
+  }
+]

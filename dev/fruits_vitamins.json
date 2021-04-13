@@ -1,0 +1,118 @@
+[
+    {
+        "vitamin": "vitamin A",
+        "fruits": [
+            "mango",
+            "cantaloupe",
+            "grapefruit",
+            "watermelon",
+            "papaya",
+            "carrot",
+            "apricot",
+            "passion fruit",
+            "cherries",
+            "salad"
+        ]
+    },
+    {
+        "vitamin": "vitamin B1",
+        "fruits": [
+            "tomatoes",
+            "pineapple",
+            "grapefruit",
+            "apple",
+            "carrot"
+        ]
+    },
+    {
+        "vitamin": "vitamin B2",
+        "fruits": [
+            "apple"
+        ]
+    },
+    {
+        "vitamin": "vitamin C",
+        "fruits": [
+            "nectarine",
+            "melon",
+            "pear",
+            "pomegranate",
+            "grapefruit",
+            "clementines",
+            "blackberries",
+            "strawberries",
+            "pomelo",
+            "passion fruit",
+            "lemon",
+            "orange",
+            "grapes",
+            "cherries",
+            "salad"
+        ]
+    },
+    {
+        "vitamin": "vitamin K",
+        "fruits": [
+            "pear",
+            "pomegranate",
+            "blackberries",
+            "pinapple",
+            "peaches",
+            "kiwi",
+            "grapes",
+            "cherries"
+        ]
+    },
+    {
+        "vitamin": "calcium",
+        "fruits": [
+            "plum"
+        ]
+    },
+    {
+        "vitamin": "magnesium",
+        "fruits": [
+            "plum"
+        ]
+    },
+    {
+        "vitamin": "vitamin E",
+        "fruits": [
+            "mango",
+            "apricot",
+            "cranberries",
+            "pinapple",
+            "peaches",
+            "kiwi"
+        ]
+    },
+    {
+        "vitamin": "vitamin B6",
+        "fruits": [
+            "blueberries",
+            "pinapple",
+            "lychee",
+            "lemon",
+            "bananas"
+        ]
+    },
+    {
+        "vitamin": "vitamin K1",
+        "fruits": [
+            "blueberries",
+            "cranberries"
+        ]
+    },
+    {
+        "vitamin": "vitamin B5",
+        "fruits": [
+            "apricot"
+        ]
+    },
+    {
+        "vitamin": "vitamin B9",
+        "fruits": [
+            "strawberries"
+        ]
+    }
+]

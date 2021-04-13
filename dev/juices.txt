@@ -1,1 +1,0 @@
-[{"calories":227.5,"fruits":["apple","cranberries","beet","lemon"],"id":1,"preparationDate":"2021-04-12.22:29:33","quantity":500.0},{"calories":227.5,"fruits":["apple","cranberries","beet","lemon"],"id":1,"preparationDate":"2021-04-12.22:47:38","quantity":500.0}]

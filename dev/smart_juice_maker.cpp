@@ -26,7 +26,7 @@
 #include <nlohmann/json.hpp>
 #include <chrono>
 #include <ctime>
-
+#include <string>
 #include <signal.h>
 
 using namespace std;
@@ -34,15 +34,19 @@ using namespace Pistache;
 using json = nlohmann::json;
 
 // Declare all helper files
-const std::string caloriesFile = "fruits_calories.txt";
-const std::string vitaminsFile = "fruits_vitamins.txt";
-const std::string juiceHistoryDB = "juices.txt";
+const std::string caloriesFile = "fruits_calories.json";
+const std::string vitaminsFile = "fruits_vitamins.json";
+const std::string juiceHistoryDB = "juices.json";
 
 // Helper class
 class Helpers
 {
 public:
     const static std::string currentDateTime();
+    static json readJson(std::string fileName);
+    static void removeStringDuplicates(std::vector<string> &v);
+
+
 };
 
 const std::string Helpers::currentDateTime()
@@ -55,6 +59,30 @@ const std::string Helpers::currentDateTime()
 
     return buf;
 }
+
+ json Helpers::readJson(std::string fileName)
+ {
+    std::ifstream read(fileName);
+    json in;
+    read >> in;
+    return in;
+ }
+
+ void Helpers::removeStringDuplicates(std::vector<string> &v)
+{
+    std::vector<string>::iterator itr = v.begin();
+    std::unordered_set<string> s;
+ 
+    for (auto curr = v.begin(); curr != v.end(); ++curr)
+    {
+        if (s.insert(*curr).second) {
+            *itr++ = *curr;
+        }
+    }
+ 
+    v.erase(itr, v.end());
+}
+ 
 // General advice: pay atetntion to the namespaces that you use in various contexts. Could prevent headaches.
 // This is just a helper function to preety-print the Cookies that one of the enpoints shall receive.
 void printCookies(const Http::Request &req)
@@ -69,13 +97,6 @@ void printCookies(const Http::Request &req)
     std::cout << "]" << std::endl;
 }
 
-class FruitCalories
-{
-public:
-    std::string name;
-    double calories;
-};
-
 class Fruit
 {
 public:
@@ -84,19 +105,30 @@ public:
     std::vector<string> vitamins;
 };
 
+class FruitCalories
+{
+public:
+    std::string name;
+    double calories;
+};
+
+class VitaminFruits
+{
+    public:
+    std::string vitaminName;
+    std::vector<std::string> fruits;
+};
+
 class Juice
 {
 public:
-    static int id;
+    int identifier;
     double calories;
     double quantity;
     string preparationDate;
     std::vector<string> vitamins;
     std::vector<string> fruits;
 };
-
-// TODO: get the number of juice form juices.txt
-int Juice::id = 0;
 
 // from_json overloading
 void from_json(const json &json, Fruit &fruit)
@@ -111,24 +143,32 @@ void from_json(const json &json, FruitCalories &fruitCalories)
     json.at("calories").get_to(fruitCalories.calories);
 }
 
+void from_json(const json &json, VitaminFruits &vitaminFruits)
+{
+    json.at("vitamin").get_to(vitaminFruits.vitaminName);
+    json.at("fruits").get_to(vitaminFruits.fruits);
+}
+
 void from_json(const json &json, Juice &juice)
 {
-     json.at("id").get_to(juice.id);
+     json.at("identifier").get_to(juice.identifier);
      json.at("quantity").get_to(juice.quantity);
      json.at("calories").get_to(juice.calories);
      json.at("preparationDate").get_to(juice.preparationDate);
      json.at("fruits").get_to(juice.fruits);
+    json.at("vitamins").get_to(juice.vitamins);
 }
 
 // to_json overloading
 void to_json(json &j, const Juice &juice)
 {
     j = json{
-        {"id", juice.id},
+        {"identifier", juice.identifier},
         {"calories", juice.calories},
         {"quantity", juice.quantity},
         {"preparationDate", juice.preparationDate},
-        {"fruits", juice.fruits}};
+        {"fruits", juice.fruits},
+        {"vitamins", juice.vitamins}};
 }
 
 // Some generic namespace, with a simple function we could use to test the creation of the endpoints.
@@ -139,26 +179,92 @@ namespace Generic
         response.send(Http::Code::Ok, "1");
     }
 
+      std::vector<FruitCalories> GetFruitCalories()
+    {
+        json in = Helpers::readJson(caloriesFile);
+        auto fruitCalories = in.get<std::vector<FruitCalories>>();  
+        return fruitCalories;
+    }
+
+    std::vector<Juice> GetJuiceHistory()
+    {
+        json juiceHistoryJson = Helpers::readJson(juiceHistoryDB);
+        std::vector<Juice> juices = juiceHistoryJson.get<std::vector<Juice>>();
+
+        return juices;
+    }
+
+    void AddJuiceInHistory(std::vector<Juice> juiceHistory, Juice newJuice)
+    {
+        json juice(newJuice);
+
+        juiceHistory.push_back(newJuice);
+        json juicesJson = juiceHistory;
+
+        std::ofstream out(juiceHistoryDB);
+        out << juicesJson;
+    }
+
+    std::vector<VitaminFruits> GetVitaminFruits()
+    {
+        json in = Helpers::readJson(vitaminsFile);
+        auto vitaminFruits = in.get<std::vector<VitaminFruits>>();  
+        return vitaminFruits;
+    }
+
+    std::vector<std::string> GetFruitNames(std::vector<Fruit> fruits)
+    {
+        std::vector<std::string> fruitNames;
+        
+        for(auto fruit : fruits)
+            fruitNames.push_back(fruit.name);
+
+            return fruitNames;
+    }
+
+    std::vector<string> GetVitaminsByFruits(std::vector<string> clientFruits)
+    {
+        auto vitaminFruits = GetVitaminFruits();
+        std::vector<std::string> vitamins;
+
+        for(auto vitamin : vitaminFruits)
+        {
+            for(auto fruit : vitamin.fruits)
+            {
+                for(auto clientFruit : clientFruits)
+                {
+                    if(boost::iequals(clientFruit, fruit))
+                    {
+                        vitamins.push_back(vitamin.vitaminName);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return vitamins;
+    }
+
     void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
     {
         // from client
         auto clientJson = nlohmann::json::parse(request.body());
         auto clientFruits = clientJson.get<std::vector<Fruit>>();
-
-        std::ifstream read(caloriesFile);
-        json in = json::parse(read);
-        auto fruitCalories = in.get<std::vector<FruitCalories>>();
+        auto fruitCalories = GetFruitCalories();
+        auto juices = GetJuiceHistory();
 
         Juice newJuice;
-        Juice::id++;
+
+        newJuice.identifier = juices.size() + 1;
         newJuice.quantity = 0;
         newJuice.calories = 0;
         newJuice.preparationDate = Helpers::currentDateTime();
+
         for (auto fruitClient : clientFruits)
         {
             for (auto fruitCal : fruitCalories)
             {
-                if (fruitClient.name == fruitCal.name)
+                if (boost::iequals(fruitClient.name, fruitCal.name))
                 {
                     newJuice.fruits.push_back(fruitClient.name);
                     newJuice.quantity += fruitClient.quantity;
@@ -167,18 +273,42 @@ namespace Generic
             }
         }
 
+        newJuice.vitamins = GetVitaminsByFruits(GetFruitNames(clientFruits));
+        Helpers::removeStringDuplicates(newJuice.vitamins);
+
         json juice(newJuice);
-
-        std::ifstream juiceHistory(juiceHistoryDB);
-        json juiceHistoryJson = json::parse(juiceHistory);
-        std::vector<Juice> juices = juiceHistoryJson.get<std::vector<Juice>>();
-
-        juices.push_back(newJuice);
-        json juicesJson = juices;
-
-        std::ofstream out(juiceHistoryDB);
-        out << juicesJson;
+        AddJuiceInHistory(juices, newJuice);
+       
         response.send(Http::Code::Ok, juice.dump());
+    }
+
+    //second functionality, get a list of fruits based on a list of vitamins from client
+    void getFruitsByVitamins(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        auto clientJson = nlohmann::json::parse(request.body());
+        auto clientVitamins = clientJson.get<std::vector<std::string>>();
+
+        auto vitaminFruits = GetVitaminFruits();
+
+        std::vector<std::string> fruits;
+
+        for(auto clientVitamin : clientVitamins)
+        {
+            for(auto vitamin : vitaminFruits)
+            {
+                if(boost::iequals(clientVitamin, vitamin.vitaminName))
+                {
+                    fruits.insert( fruits.end(), vitamin.fruits.begin(), vitamin.fruits.end());
+                }
+            }
+        }
+
+        Helpers::removeStringDuplicates(fruits);
+
+        json fruitsJson(fruits);
+
+        response.send(Http::Code::Ok, fruitsJson.dump());
+
     }
 }
 
@@ -222,6 +352,7 @@ private:
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called.
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
         Routes::Post(router, "/makeJuice", Routes::bind(&Generic::makeJuice));
+        Routes::Post(router, "/getFruitsByVitamins", Routes::bind(&Generic::getFruitsByVitamins));
         Routes::Get(router, "/auth", Routes::bind(&SmartJuiceMakerEndpoint::doAuth, this));
         Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&SmartJuiceMakerEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&SmartJuiceMakerEndpoint::getSetting, this));
