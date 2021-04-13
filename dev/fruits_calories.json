@@ -1,0 +1,119 @@
+[{
+    "fruit": "apple",
+    "calories": 52
+  },
+  {
+    "fruit": "bananas",
+    "calories": 52
+  },
+  {
+    "fruit": "cherries",
+    "calories": 50
+  },
+
+  {
+    "fruit": "grapes",
+    "calories": 67
+  },
+  {
+    "fruit": "kiwi",
+    "calories": 61
+  },
+  {
+    "fruit": "lemon",
+    "calories": 29
+  },
+  {
+    "fruit": "lychee",
+    "calories": 66
+  },
+  {
+    "fruit": "passion fruit",
+    "calories": 97
+  },
+  {
+    "fruit": "peaches",
+    "calories": 39
+  },
+  {
+    "fruit": "pinapple",
+    "calories": 50
+  },
+  {
+    "fruit": "pomelo",
+    "calories": 38
+  },
+  {
+    "fruit": "strawberries",
+    "calories": 33
+  },
+  {
+    "fruit": "watermelon",
+    "calories": 30
+  },
+  {
+    "fruit": "cranberries",
+    "calories": 46
+  },
+  {
+    "fruit": "apricot",
+    "calories": 51
+  },
+  {
+    "fruit": "blackberries",
+    "calories": 25
+  },
+  {
+    "fruit": "blueberries",
+    "calories": 57
+  },
+  {
+    "fruit": "clementines",
+    "calories": 47
+  },
+  {
+    "fruit": "grapefruit",
+    "calories": 30
+  },
+  {
+    "fruit": "mango",
+    "calories": 57
+  },
+  {
+    "fruit": "melon",
+    "calories": 34
+  },
+  {
+    "fruit": "nectarine",
+    "calories": 36
+  },
+  {
+    "fruit": "orange",
+    "calories": 37
+  },
+  {
+    "fruit": "pear",
+    "calories": 37
+  },
+  {
+    "fruit": "plum",
+    "calories": 34
+  },
+  {
+    "fruit": "pomegranate",
+    "calories": 68
+  }
+  ,
+  { "fruit": "cantaloupe",
+  "calories": 33.7
+  },
+  { "fruit": "papaya",
+  "calories": 42.8
+  },
+  { "fruit": "carrot",
+  "calories": 41.3
+  },
+  {"fruit": "salad",
+  "calories": 17
+  }
+]

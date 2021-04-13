@@ -1,7 +1,8 @@
 /*
-   Rares Cristea, 12.03.2021
-   Example of a REST endpoint with routing
-   using Mathieu Stefani's example, 07 février 2016
+  using Mathieu Stefani's example, 07 février 2016
+  Rares Cristea, 12.03.2021
+  Smart Juice Maker Project
+   
 */
 
 #include <algorithm>
@@ -22,14 +23,67 @@
 #include <string>
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
-
+#include <nlohmann/json.hpp>
+#include <chrono>
+#include <ctime>
+#include <string>
 #include <signal.h>
 
 using namespace std;
 using namespace Pistache;
+using json = nlohmann::json;
 
+// Declare all helper files
+const std::string caloriesFile = "fruits_calories.json";
+const std::string vitaminsFile = "fruits_vitamins.json";
+const std::string juiceHistoryDB = "juices.json";
+
+// Helper class
+class Helpers
+{
+public:
+    const static std::string currentDateTime();
+    static json readJson(std::string fileName);
+    static void removeStringDuplicates(std::vector<string> &v);
+
+
+};
+
+const std::string Helpers::currentDateTime()
+{
+    time_t now = time(0);
+    struct tm tstruct;
+    char buf[80];
+    tstruct = *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+
+    return buf;
+}
+
+ json Helpers::readJson(std::string fileName)
+ {
+    std::ifstream read(fileName);
+    json in;
+    read >> in;
+    return in;
+ }
+
+ void Helpers::removeStringDuplicates(std::vector<string> &v)
+{
+    std::vector<string>::iterator itr = v.begin();
+    std::unordered_set<string> s;
+ 
+    for (auto curr = v.begin(); curr != v.end(); ++curr)
+    {
+        if (s.insert(*curr).second) {
+            *itr++ = *curr;
+        }
+    }
+ 
+    v.erase(itr, v.end());
+}
+ 
 // General advice: pay atetntion to the namespaces that you use in various contexts. Could prevent headaches.
-
 // This is just a helper function to preety-print the Cookies that one of the enpoints shall receive.
 void printCookies(const Http::Request &req)
 {
@@ -43,6 +97,80 @@ void printCookies(const Http::Request &req)
     std::cout << "]" << std::endl;
 }
 
+class Fruit
+{
+public:
+    std::string name;
+    double quantity;
+    std::vector<string> vitamins;
+};
+
+class FruitCalories
+{
+public:
+    std::string name;
+    double calories;
+};
+
+class VitaminFruits
+{
+    public:
+    std::string vitaminName;
+    std::vector<std::string> fruits;
+};
+
+class Juice
+{
+public:
+    int identifier;
+    double calories;
+    double quantity;
+    string preparationDate;
+    std::vector<string> vitamins;
+    std::vector<string> fruits;
+};
+
+// from_json overloading
+void from_json(const json &json, Fruit &fruit)
+{
+    json.at("fruit").get_to(fruit.name);
+    json.at("quantity").get_to(fruit.quantity);
+}
+
+void from_json(const json &json, FruitCalories &fruitCalories)
+{
+    json.at("fruit").get_to(fruitCalories.name);
+    json.at("calories").get_to(fruitCalories.calories);
+}
+
+void from_json(const json &json, VitaminFruits &vitaminFruits)
+{
+    json.at("vitamin").get_to(vitaminFruits.vitaminName);
+    json.at("fruits").get_to(vitaminFruits.fruits);
+}
+
+void from_json(const json &json, Juice &juice)
+{
+     json.at("identifier").get_to(juice.identifier);
+     json.at("quantity").get_to(juice.quantity);
+     json.at("calories").get_to(juice.calories);
+     json.at("preparationDate").get_to(juice.preparationDate);
+     json.at("fruits").get_to(juice.fruits);
+    json.at("vitamins").get_to(juice.vitamins);
+}
+
+// to_json overloading
+void to_json(json &j, const Juice &juice)
+{
+    j = json{
+        {"identifier", juice.identifier},
+        {"calories", juice.calories},
+        {"quantity", juice.quantity},
+        {"preparationDate", juice.preparationDate},
+        {"fruits", juice.fruits},
+        {"vitamins", juice.vitamins}};
+}
+
 // Some generic namespace, with a simple function we could use to test the creation of the endpoints.
 namespace Generic
 {
@@ -50,13 +178,145 @@ namespace Generic
     {
         response.send(Http::Code::Ok, "1");
     }
+
+      std::vector<FruitCalories> GetFruitCalories()
+    {
+        json in = Helpers::readJson(caloriesFile);
+        auto fruitCalories = in.get<std::vector<FruitCalories>>();  
+        return fruitCalories;
+    }
+
+    std::vector<Juice> GetJuiceHistory()
+    {
+        json juiceHistoryJson = Helpers::readJson(juiceHistoryDB);
+        std::vector<Juice> juices = juiceHistoryJson.get<std::vector<Juice>>();
+
+        return juices;
+    }
+
+    void AddJuiceInHistory(std::vector<Juice> juiceHistory, Juice newJuice)
+    {
+        json juice(newJuice);
+
+        juiceHistory.push_back(newJuice);
+        json juicesJson = juiceHistory;
+
+        std::ofstream out(juiceHistoryDB);
+        out << juicesJson;
+    }
+
+    std::vector<VitaminFruits> GetVitaminFruits()
+    {
+        json in = Helpers::readJson(vitaminsFile);
+        auto vitaminFruits = in.get<std::vector<VitaminFruits>>();  
+        return vitaminFruits;
+    }
+
+    std::vector<std::string> GetFruitNames(std::vector<Fruit> fruits)
+    {
+        std::vector<std::string> fruitNames;
+        
+        for(auto fruit : fruits)
+            fruitNames.push_back(fruit.name);
+
+            return fruitNames;
+    }
+
+    std::vector<string> GetVitaminsByFruits(std::vector<string> clientFruits)
+    {
+        auto vitaminFruits = GetVitaminFruits();
+        std::vector<std::string> vitamins;
+
+        for(auto vitamin : vitaminFruits)
+        {
+            for(auto fruit : vitamin.fruits)
+            {
+                for(auto clientFruit : clientFruits)
+                {
+                    if(boost::iequals(clientFruit, fruit))
+                    {
+                        vitamins.push_back(vitamin.vitaminName);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return vitamins;
+    }
+
+    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        // from client
+        auto clientJson = nlohmann::json::parse(request.body());
+        auto clientFruits = clientJson.get<std::vector<Fruit>>();
+        auto fruitCalories = GetFruitCalories();
+        auto juices = GetJuiceHistory();
+
+        Juice newJuice;
+
+        newJuice.identifier = juices.size() + 1;
+        newJuice.quantity = 0;
+        newJuice.calories = 0;
+        newJuice.preparationDate = Helpers::currentDateTime();
+
+        for (auto fruitClient : clientFruits)
+        {
+            for (auto fruitCal : fruitCalories)
+            {
+                if (boost::iequals(fruitClient.name, fruitCal.name))
+                {
+                    newJuice.fruits.push_back(fruitClient.name);
+                    newJuice.quantity += fruitClient.quantity;
+                    newJuice.calories += (fruitCal.calories * fruitClient.quantity) / 100;
+                }
+            }
+        }
+
+        newJuice.vitamins = GetVitaminsByFruits(GetFruitNames(clientFruits));
+        Helpers::removeStringDuplicates(newJuice.vitamins);
+
+        json juice(newJuice);
+        AddJuiceInHistory(juices, newJuice);
+       
+        response.send(Http::Code::Ok, juice.dump());
+    }
+
+    //second functionality, get a list of fruits based on a list of vitamins from client
+    void getFruitsByVitamins(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        auto clientJson = nlohmann::json::parse(request.body());
+        auto clientVitamins = clientJson.get<std::vector<std::string>>();
+
+        auto vitaminFruits = GetVitaminFruits();
+
+        std::vector<std::string> fruits;
+
+        for(auto clientVitamin : clientVitamins)
+        {
+            for(auto vitamin : vitaminFruits)
+            {
+                if(boost::iequals(clientVitamin, vitamin.vitaminName))
+                {
+                    fruits.insert( fruits.end(), vitamin.fruits.begin(), vitamin.fruits.end());
+                }
+            }
+        }
+
+        Helpers::removeStringDuplicates(fruits);
+
+        json fruitsJson(fruits);
+
+        response.send(Http::Code::Ok, fruitsJson.dump());
+
+    }
 }
 
-// Definition of the MicrowaveEnpoint class
-class MicrowaveEndpoint
+// Definition of the SmartJuiceMakerEndpoint class
+class SmartJuiceMakerEndpoint
 {
 public:
-    explicit MicrowaveEndpoint(Address addr)
+    explicit SmartJuiceMakerEndpoint(Address addr)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     {
     }
@@ -91,9 +351,11 @@ private:
         // Defining various endpoints
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called.
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Get(router, "/auth", Routes::bind(&MicrowaveEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&MicrowaveEndpoint::setSetting, this));
-        Routes::Get(router, "/settings/:settingName/", Routes::bind(&MicrowaveEndpoint::getSetting, this));
+        Routes::Post(router, "/makeJuice", Routes::bind(&Generic::makeJuice));
+        Routes::Post(router, "/getFruitsByVitamins", Routes::bind(&Generic::getFruitsByVitamins));
+        Routes::Get(router, "/auth", Routes::bind(&SmartJuiceMakerEndpoint::doAuth, this));
+        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&SmartJuiceMakerEndpoint::setSetting, this));
+        Routes::Get(router, "/settings/:settingName/", Routes::bind(&SmartJuiceMakerEndpoint::getSetting, this));
     }
 
     void doAuth(const Rest::Request &request, Http::ResponseWriter response)
@@ -107,7 +369,7 @@ private:
         response.send(Http::Code::Ok);
     }
 
-    // Endpoint to configure one of the Microwave's settings.
+    // Endpoint to configure one of the SmartJuiceMaker's settings.
     void setSetting(const Rest::Request &request, Http::ResponseWriter response)
     {
         // You don't know what the parameter content that you receive is, but you should
@@ -115,7 +377,7 @@ private:
         auto settingName = request.param(":settingName").as<std::string>();
 
         // This is a guard that prevents editing the same value by two concurent threads.
-        Guard guard(microwaveLock);
+        Guard guard(smartJuiceMakerLock);
 
         string val = "";
         if (request.hasParam(":value"))
@@ -124,8 +386,8 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
-        int setResponse = mwv.set(settingName, val);
+        // Setting the smart juice maker's setting to value
+        int setResponse = sjm.set(settingName, val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1)
@@ -138,14 +400,14 @@ private:
         }
     }
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the SmartJuiceMaker
     void getSetting(const Rest::Request &request, Http::ResponseWriter response)
     {
         auto settingName = request.param(":settingName").as<std::string>();
 
-        Guard guard(microwaveLock);
+        Guard guard(smartJuiceMakerLock);
 
-        string valueSetting = mwv.get(settingName);
+        string valueSetting = sjm.get(settingName);
 
         if (valueSetting != "")
         {
@@ -164,11 +426,11 @@ private:
         }
     }
 
-    // Defining the class of the Microwave. It should model the entire configuration of the Microwave
-    class Microwave
+    // Defining the class of the SmartJuiceMaker. It should model the entire configuration of the SmartJuiceMaker
+    class SmartJuiceMaker
     {
     public:
-        explicit Microwave() {}
+        explicit SmartJuiceMaker() {}
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
         int set(std::string name, std::string value)
@@ -215,10 +477,10 @@ private:
     // Create the lock which prevents concurrent editing of the same variable
     using Lock = std::mutex;
     using Guard = std::lock_guard<Lock>;
-    Lock microwaveLock;
+    Lock smartJuiceMakerLock;
 
-    // Instance of the microwave model
-    Microwave mwv;
+    // Instance of the smart juice maker model
+    SmartJuiceMaker sjm;
 
     // Defining the httpEndpoint and a router.
     std::shared_ptr<Http::Endpoint> httpEndpoint;
@@ -256,7 +518,7 @@ int main(int argc, char *argv[])
     cout << "Using " << thr << " threads" << endl;
 
     // Instance of the class that defines what the server can do.
-    MicrowaveEndpoint stats(addr);
+    SmartJuiceMakerEndpoint stats(addr);
 
     // Initialize and start the server
     stats.init(thr);
