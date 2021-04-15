@@ -37,9 +37,8 @@ class Helpers
 {
 public:
     const static string currentDateTime();
-    const static time_t getTimestampFromString(string dateTimeString);
+    const static time_t getTimestampFromString(const string &dateTimeString);
     static void removeStringDuplicates(vector<string> &v);
-    static auto getJsonValue(json json, string property);
 };
 
 const string Helpers::currentDateTime()
@@ -53,7 +52,7 @@ const string Helpers::currentDateTime()
     return buf;
 }
 
-const time_t Helpers::getTimestampFromString(string dateTimeString) {
+const time_t Helpers::getTimestampFromString(const string &dateTimeString) {
     const char *dateTime = dateTimeString.data();
     struct tm tm;
     strptime(dateTime, "%Y-%m-%d.%X", &tm);
@@ -73,11 +72,6 @@ const time_t Helpers::getTimestampFromString(string dateTimeString) {
     }
  
     v.erase(itr, v.end());
-}
-
-auto Helpers::getJsonValue(json json, string property)
-{
-    return json.at(property);
 }
 
 // Some generic namespace, with a simple function we could use to test the creation of the endpoints.
@@ -196,10 +190,10 @@ namespace Generic
         time_t dateFrom = 0, dateTo = numeric_limits<time_t>::max();
 
         if (clientJson.contains("dateFrom")) {
-            dateFrom = Helpers::getTimestampFromString(Helpers::getJsonValue(clientJson, "dateFrom"));
+            dateFrom = Helpers::getTimestampFromString(clientJson["dateFrom"].get<string>());
         }
         if (clientJson.contains("dateTo")) {
-            dateTo = Helpers::getTimestampFromString(Helpers::getJsonValue(clientJson, "dateTo"));;
+            dateTo = Helpers::getTimestampFromString(clientJson["dateTo"].get<string>());
         }
         
         const auto juices = GetJuiceHistory();
@@ -207,7 +201,7 @@ namespace Generic
         
         for (auto juice : juices) 
         {
-            auto preparationDate = Helpers::getTimestampFromString(Helpers::getJsonValue(json(juice), "preparationDate"));
+            auto preparationDate = Helpers::getTimestampFromString(juice.getPreparationDate());
 
             if (difftime(preparationDate, dateFrom) > 0 && difftime(preparationDate, dateTo) < 0)
             {
