@@ -211,6 +211,32 @@ namespace Generic
 
         response.send(Http::Code::Ok, json(filteredJuices).dump());
     }
+
+    // the fourth functionality: get a juice by identifier
+    void getJuiceByIdentifier(const Rest::Request &request, Http::ResponseWriter response) 
+    {
+        const auto clientJson = nlohmann::json::parse(request.body());
+        int identifier = clientJson["identifier"].get<int>();
+
+        const auto juices = GetJuiceHistory();
+        Juice *desiredJuice = NULL; 
+
+        for (auto juice : juices) 
+        {
+            if (identifier == juice.getIdentifier())
+            {
+                desiredJuice = new Juice(juice);
+                break;
+            }
+        }
+        
+        if (desiredJuice != NULL) 
+        {
+            response.send(Http::Code::Ok, json(*(desiredJuice)).dump());  
+            return;
+        } 
+        response.send(Http::Code::Not_Found, "Juice not found!"); 
+    }
 }
 
 // Definition of the SmartJuiceMakerEndpoint class
@@ -255,6 +281,7 @@ private:
         Routes::Post(router, "/makeJuice", Routes::bind(&Generic::makeJuice));
         Routes::Post(router, "/getFruitsByVitamins", Routes::bind(&Generic::getFruitsByVitamins));
         Routes::Get(router, "/getJuicesBetweenDates", Routes::bind(&Generic::getJuicesBetweenDates));
+        Routes::Get(router, "/getJuiceByIdentifier", Routes::bind(&Generic::getJuiceByIdentifier));
     }
 
     // Defining the class of the SmartJuiceMaker. It should model the entire configuration of the SmartJuiceMaker
