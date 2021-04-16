@@ -162,7 +162,7 @@ namespace Generic
 
         auto vitaminFruits = GetVitaminFruits();
 
-        vector<string> fruits;
+        std::vector<VitaminFruits> associatedFruits;
 
         for(auto clientVitamin : clientVitamins)
         {
@@ -170,15 +170,11 @@ namespace Generic
             {
                 if(boost::iequals(clientVitamin, vitamin.getVitaminName()))
                 {
-                    auto fruitsCopy = vitamin.getFruits();
-                    fruits.insert(fruits.end(), fruitsCopy.begin(), fruitsCopy.end());
+                    associatedFruits.push_back(vitamin);
                 }
             }
         }
-
-        Helpers::removeStringDuplicates(fruits);
-
-        response.send(Http::Code::Ok, json(fruits).dump());
+        response.send(Http::Code::Ok, json(associatedFruits).dump());
     }
 
     // the third functionality: get all juices between two given dates
