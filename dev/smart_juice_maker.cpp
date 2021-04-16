@@ -24,7 +24,8 @@
 #include <time.h>
 #include <string>
 #include <signal.h>
-
+#include <mosquitto.h>
+#include "unistd.h"
 #include "models.cpp"
 #include "repository.cpp"
 
@@ -114,10 +115,7 @@ namespace Generic
         return vitamins;
     }
 
-    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
-    {
-        // from client
-        auto clientJson = nlohmann::json::parse(request.body());
+    json createJuice(json clientJson) {
         auto clientFruits = clientJson.get<vector<Fruit>>();
         auto fruitCalories = GetFruitCalories();
         auto juices = GetJuiceHistory();
@@ -150,7 +148,15 @@ namespace Generic
 
         json juice(newJuice);
         AddJuiceInHistory(juices, newJuice);
-       
+
+        return juice;
+    }
+
+    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        // from client
+        auto clientJson = nlohmann::json::parse(request.body());
+        json juice = createJuice(clientJson);
         response.send(Http::Code::Ok, juice.dump());
     }
 
@@ -385,11 +391,37 @@ int main(int argc, char *argv[])
     stats.init(thr);
     stats.start();
 
+    struct mosquitto *mosq;
+    // Fork so we'll have 2 processes: one for http requests and for mqtt
+    int pid = fork();
+    if(pid == 0) {
+        
+        mosquitto_lib_init();
+
+        mosq = mosquitto_new("publisher", true, NULL);
+        int rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+        if(rc != 0)
+        {
+            printf("\nError with code = %d\n", rc);
+            mosquitto_destroy(mosq);
+            return -1;
+        }
+        while(1)
+        {
+            json juice = Generic::createJuice(GetCurrentFruits());
+            string stringJuice = juice.dump();
+            mosquitto_publish(mosq, NULL, "mqtt", stringJuice.size(), stringJuice.c_str(), 0, false);
+            sleep(20);
+        }
+    }
+
     // Code that waits for the shutdown sinal for the server
     int signal = 0;
     int status = sigwait(&signals, &signal);
     if (status == 0)
     {
+        mosquitto_disconnect(mosq);
+        mosquitto_lib_cleanup();
         cout << "received signal " << signal << endl;
     }
     else

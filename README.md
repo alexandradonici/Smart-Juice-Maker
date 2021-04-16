@@ -28,7 +28,12 @@ sudo apt-get install libboost-dev
 
 ### Compile the file
 ```
- g++ smart_juice_maker.cpp -o smartjuicemaker -lpistache -lcrypto -lssl -lpthread -std=c++17
+ g++ smart_juice_maker.cpp -o smartjuicemaker -lpistache -lmosquitto -lcrypto -lssl -lpthread -std=c++17
+```
+
+### Start de MQTT process
+```
+mosquitto -v
 ```
 
 ### Run the file
@@ -36,9 +41,14 @@ sudo apt-get install libboost-dev
  ./smartjuicemaker
  ```
 
+### Subscribe to topic
+```
+mosquitto_sub -t mqtt
+```
+
 ## Features
 
-1. ### Get a juice based on a list of fruits
+1. ### Get a juice based on a list of fruits (HTTP and MQTT)
 ```
 http://localhost:9080/makeJuice
 ```
@@ -201,3 +211,12 @@ Output format:
 ]
 ```
 
+#### Process not closed
+Sometimes, after the process was terminated via CTRL+C, it is not killed, so you have to do it yourself manually.
+```
+ps -U <username> -au
+```
+Check for the smartjuicemaker process and kill it:
+```
+sudo kill -9 <pid>
+```
