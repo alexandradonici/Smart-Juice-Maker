@@ -11,3 +11,21 @@ In fruits_calories.txt pastram caloriile pe care le are fruct (cal/100g).
 ]
 
 Il consideram mai departe ca input pentru preparea sucului.
+
+2. TBD
+
+3.  Input-ul este primit in format json si contine datele intre care se doreste returnarea sucurilor
+    Daca una dintre date lipseste, va fi ignorata
+    
+Exemplu de input:
+{
+    "dateFrom": "2021-03-17.20:01:00",
+    "dateTo": "2021-04-17.20:01:00"
+}
+
+4. Input-ul este in format json si contine identificatorul sucului care se doreste a fi returnat.
+
+Exemplu de input:
+{
+    "identifier": 1
+}
