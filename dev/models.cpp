@@ -15,7 +15,7 @@ public:
         this->name = name;
     }
 
-    string getName()
+    string getName() const
     {
         return name;
     }
@@ -25,7 +25,7 @@ public:
         this->quantity = quantity;
     }
 
-    double getQuantity()
+    double getQuantity() const
     {
         return quantity;
     }
@@ -196,6 +196,12 @@ void from_json(const json &json, Juice &juice)
 }
 
 // to_json overloading
+void to_json(json &j, const Fruit &fruit)
+{
+    j = json{
+        {"fruit", fruit.getName()},
+        {"quantity", fruit.getQuantity()}};
+}
 void to_json(json &j, const Juice &juice)
 {
     j = json{

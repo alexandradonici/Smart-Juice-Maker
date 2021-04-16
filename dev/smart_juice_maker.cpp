@@ -74,12 +74,12 @@ const time_t Helpers::getTimestampFromString(const string &dateTimeString) {
     v.erase(itr, v.end());
 }
 
-// Some generic namespace, with a simple function we could use to test the creation of the endpoints.
+// Some generic namespace, with a simple function we could use to test the creation of the endpoints. blablabla
 namespace Generic
 {
     void handleReady(const Rest::Request &, Http::ResponseWriter response)
     {
-        response.send(Http::Code::Ok, "UP");
+        response.send(Http::Code::Ok, "UP\n");
     }
 
     vector<string> GetFruitNames(vector<Fruit> fruits)
@@ -237,6 +237,48 @@ namespace Generic
         } 
         response.send(Http::Code::Not_Found, "Juice not found!"); 
     }
+
+    // get a list of fruits based on the amount of calories the juice will contain
+    void getQuantitiesByCaloriesAndFruits(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        const auto clientJson = nlohmann::json::parse(request.body());
+        double calories = clientJson["calories"].get<int>();
+        auto clientFruits = clientJson["fruits"].get<vector<Fruit>>();
+        auto calSum = 0;
+        
+        auto fruitCalories = GetFruitCalories();
+        
+        for (auto clientFruit : clientFruits) 
+        {
+            for (auto fruitCal : fruitCalories) 
+            {
+                if (boost::iequals(clientFruit.getName(), fruitCal.getName()))
+                {
+                    auto newCal = (clientFruit.getQuantity() * fruitCal.getCalories()) / 100;
+                    calSum += newCal;
+                }
+            }
+        }
+
+        if (calSum < calories) 
+        {
+            response.send(Http::Code::Not_Found, "Insufficient num of calories!"); 
+        } else 
+        {
+            vector<Fruit> newFruits;
+            for (auto clientFruit : clientFruits) 
+            {
+                auto newQuantity = (clientFruit.getQuantity() * calories) / calSum;
+                Fruit newFruit;
+                newFruit.setName(clientFruit.getName());
+                // Round the results to 2 points decimal
+                newFruit.setQuantity(round( newQuantity * 100.0 ) / 100.0);
+                newFruits.push_back(newFruit);
+            }
+            
+            response.send(Http::Code::Ok, json(newFruits).dump());
+        }
+    }
 }
 
 // Definition of the SmartJuiceMakerEndpoint class
@@ -282,6 +324,7 @@ private:
         Routes::Post(router, "/getFruitsByVitamins", Routes::bind(&Generic::getFruitsByVitamins));
         Routes::Get(router, "/getJuicesBetweenDates", Routes::bind(&Generic::getJuicesBetweenDates));
         Routes::Get(router, "/getJuiceByIdentifier", Routes::bind(&Generic::getJuiceByIdentifier));
+        Routes::Post(router, "/getQuantitiesByCaloriesAndFruits", Routes::bind(&Generic::getQuantitiesByCaloriesAndFruits));
     }
 
     // Defining the class of the SmartJuiceMaker. It should model the entire configuration of the SmartJuiceMaker
