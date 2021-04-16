@@ -100,9 +100,47 @@ localhost:9080/getJuicesBetweenDates
 ```
 Input format:
 ```
+{
+    "dateFrom": "2021-03-17.20:01:00",
+    "dateTo": "2021-04-17.20:01:00"
+}
 ```
 Output format:
 ```
+[
+  {
+    "calories": 149.5,
+    "fruits": [
+      "orange",
+      "bananas",
+      "salad"
+    ],
+    "identifier": 1,
+    "preparationDate": "2021-04-13.19:26:43",
+    "quantity": 350.0,
+    "vitamins": [
+      "vitamin A",
+      "vitamin C",
+      "vitamin B6"
+    ]
+  },
+  {
+    "calories": 149.5,
+    "fruits": [
+      "orange",
+      "bananas",
+      "salad"
+    ],
+    "identifier": 2,
+    "preparationDate": "2021-04-13.19:38:56",
+    "quantity": 350.0,
+    "vitamins": [
+      "vitamin A",
+      "vitamin C",
+      "vitamin B6"
+    ]
+  }
+]
 ```
 
 4. ### Get a juice by identifier
