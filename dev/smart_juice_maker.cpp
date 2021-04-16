@@ -21,14 +21,14 @@
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <chrono>
-#include <ctime>
+#include <time.h>
 #include <string>
 #include <signal.h>
 
 #include "models.cpp"
 #include "repository.cpp"
 
-// General advice: pay atetntion to the namespaces that you use in various contexts. Could prevent headaches.
+// General advice: pay attention to the namespaces that you use in various contexts. Could prevent headaches.
 using namespace std;
 using namespace Pistache;
 
@@ -54,7 +54,7 @@ const string Helpers::currentDateTime()
 
 const time_t Helpers::getTimestampFromString(const string &dateTimeString) {
     const char *dateTime = dateTimeString.data();
-    struct tm tm;
+    struct tm tm = { 0 };
     strptime(dateTime, "%Y-%m-%d.%X", &tm);
     return mktime(&tm);
 }
@@ -74,7 +74,6 @@ const time_t Helpers::getTimestampFromString(const string &dateTimeString) {
     v.erase(itr, v.end());
 }
 
-// Some generic namespace, with a simple function we could use to test the creation of the endpoints. blablabla
 namespace Generic
 {
     void handleReady(const Rest::Request &, Http::ResponseWriter response)
@@ -189,10 +188,12 @@ namespace Generic
         const auto clientJson = nlohmann::json::parse(request.body());
         time_t dateFrom = 0, dateTo = numeric_limits<time_t>::max();
 
-        if (clientJson.contains("dateFrom")) {
+        if (clientJson.contains("dateFrom")) 
+        {
             dateFrom = Helpers::getTimestampFromString(clientJson["dateFrom"].get<string>());
         }
-        if (clientJson.contains("dateTo")) {
+        if (clientJson.contains("dateTo")) 
+        {
             dateTo = Helpers::getTimestampFromString(clientJson["dateTo"].get<string>());
         }
         
