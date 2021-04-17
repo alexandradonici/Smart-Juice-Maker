@@ -202,6 +202,7 @@ void to_json(json &j, const Fruit &fruit)
         {"fruit", fruit.getName()},
         {"quantity", fruit.getQuantity()}};
 }
+
 void to_json(json &j, const Juice &juice)
 {
     j = json{

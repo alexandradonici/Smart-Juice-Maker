@@ -131,6 +131,11 @@ namespace Generic
 
         for (auto clientFruit : clientFruits)
         {
+            if(clientFruit.getQuantity() < 0) 
+            {
+                response.send(Http::Code::Bad_Request, "The quantity must be positive!");   
+            }
+            bool fruitInFile = false;
             for (auto fruitCal : fruitCalories)
             {
                 if (boost::iequals(clientFruit.getName(), fruitCal.getName()))
@@ -140,7 +145,13 @@ namespace Generic
                     newJuice.setFruits(fruits);
                     newJuice.setQuantity(newJuice.getQuantity() + clientFruit.getQuantity());
                     newJuice.setCalories(newJuice.getCalories() + (fruitCal.getCalories() * clientFruit.getQuantity()) / 100);
+                    fruitInFile = true; // Check if the fruit is in the calories database
                 }
+            }
+            if(!fruitInFile) 
+            {
+                response.send(Http::Code::Not_Found, "The fruit " + clientFruit.getName() + 
+                                                    " cannot be found in the database!");                 
             }
         }
 
@@ -251,13 +262,24 @@ namespace Generic
         
         for (auto clientFruit : clientFruits) 
         {
+            if(clientFruit.getQuantity() < 0) 
+            {
+                response.send(Http::Code::Bad_Request, "The quantity must be positive!");   
+            }
+            bool fruitInFile = false;
             for (auto fruitCal : fruitCalories) 
             {
                 if (boost::iequals(clientFruit.getName(), fruitCal.getName()))
                 {
                     auto newCal = (clientFruit.getQuantity() * fruitCal.getCalories()) / 100;
                     calSum += newCal;
+                    fruitInFile = true; // Check if the fruit is in the calories database
                 }
+            }
+            if(!fruitInFile) 
+            {
+                response.send(Http::Code::Not_Found, "The fruit " + clientFruit.getName() + 
+                                                    " cannot be found in the database!");                 
             }
         }
 
