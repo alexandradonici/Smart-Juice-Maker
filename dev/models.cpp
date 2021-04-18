@@ -79,7 +79,7 @@ public:
         this->vitaminName = vitaminName;
     }
 
-    string getVitaminName()
+    string getVitaminName() const
     {
         return vitaminName;
     }
@@ -88,8 +88,8 @@ public:
     {
         this->fruits = fruits;
     }
-
-    vector<string> getFruits()
+ 
+    vector<string> getFruits() const
     {
         return fruits;
     }
@@ -279,6 +279,13 @@ void to_json(json &j, const Juice &juice)
         {"vitamins", juice.getVitamins()}};
 }
 
+void to_json(json &j, const VitaminFruits &vitaminFruits)
+{
+    j = json{
+        {"vitamin", vitaminFruits.getVitaminName()},
+        {"fruits", vitaminFruits.getFruits()}
+    };
+}
 void to_json(json &j, const ErrorHTTP &error)
 {
     j = json{
