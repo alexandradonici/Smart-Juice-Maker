@@ -31,7 +31,7 @@ sudo apt-get install libboost-dev
  g++ smart_juice_maker.cpp -o smartjuicemaker -lpistache -lmosquitto -lcrypto -lssl -lpthread -std=c++17
 ```
 
-### Start de MQTT process
+### Start de MQTT process - check the bottom spec if not working
 ```
 mosquitto -v
 ```
@@ -211,12 +211,16 @@ Output format:
 ]
 ```
 
-#### Process not closed
-Sometimes, after the process was terminated via CTRL+C, it is not killed, so you have to do it yourself manually.
+#### Process not closed or killing a process
+Sometimes, the MQTT process is already running, so you need to kill it by yourself.
 ```
 ps -U <username> -au
 ```
 Check for the smartjuicemaker process and kill it:
 ```
 sudo kill -9 <pid>
+```
+or directly (**recommended**)
+```
+sudo pkill mosquitto
 ```

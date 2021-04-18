@@ -166,6 +166,60 @@ public:
     }
 };
 
+class ErrorHTTP
+{
+private:
+    string error;
+    Pistache::Http::Code code;    
+public:
+    ErrorHTTP(Pistache::Http::Code code, string error) 
+    {
+        this->code = code;
+        this->error = error;
+    }
+
+    void setError(string error) 
+    {
+        this->error = error;
+    }
+
+    void setCode(Pistache::Http::Code code) 
+    {
+        this->code = code;
+    }
+
+    string getError() const
+    {
+        return error;
+    }
+
+    Pistache::Http::Code getCode() const 
+    {
+        return code;
+    }
+};
+
+class ErrorMQTT
+{
+private:
+    string error;
+public:
+    ErrorMQTT(string error) 
+    {
+        this->error = error;
+    }
+
+    void setError(string error) 
+    {
+        this->error = error;
+    }
+
+    string getError() const
+    {
+        return error;
+    }
+};
+
 // from_json overloading
 void from_json(const json &json, Fruit &fruit)
 {
@@ -195,6 +249,17 @@ void from_json(const json &json, Juice &juice)
     juice.setVitamins(json.at("vitamins"));
 }
 
+void from_json(const json &json, ErrorHTTP &error) 
+{
+    error.setCode(json.at("code"));
+    error.setError(json.at("error"));
+}
+
+void from_json(const json &json, ErrorMQTT &error) 
+{
+    error.setError(json.at("error"));
+}
+
 // to_json overloading
 void to_json(json &j, const Fruit &fruit)
 {
@@ -202,6 +267,7 @@ void to_json(json &j, const Fruit &fruit)
         {"fruit", fruit.getName()},
         {"quantity", fruit.getQuantity()}};
 }
+
 void to_json(json &j, const Juice &juice)
 {
     j = json{
@@ -211,4 +277,17 @@ void to_json(json &j, const Juice &juice)
         {"preparationDate", juice.getPreparationDate()},
         {"fruits", juice.getFruits()},
         {"vitamins", juice.getVitamins()}};
+}
+
+void to_json(json &j, const ErrorHTTP &error)
+{
+    j = json{
+        {"error", error.getError()},
+        {"code", error.getCode()}};
+}
+
+void to_json(json &j, const ErrorMQTT &error)
+{
+    j = json{
+        {"error", error.getError()}};
 }
