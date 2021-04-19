@@ -462,6 +462,7 @@ int main(int argc, char *argv[])
     {
         mosquitto_disconnect(mosq);
         mosquitto_lib_cleanup();
+        mosquitto_destroy(mosq);
         cout << "received signal " << signal << endl;
     }
     else

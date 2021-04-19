@@ -214,15 +214,19 @@ Output format:
 ### Process not closed or killing a process
 Sometimes, the MQTT process is already running, so you need to kill it by yourself.
 ```
+sudo pkill mosquitto
+```
+When running the program and receiving an error, check if the process is not already running:
+```
 ps -U <username> -au
+```
+or do it by checking if the port is not already busy
+```
+sudo netstat -lpn | grep :1883
 ```
 Check for the smartjuicemaker process and kill it:
 ```
 sudo kill -9 <pid>
-```
-or directly (**recommended**)
-```
-sudo pkill mosquitto
 ```
 ### Closing the program
 When closing the program, you should do it by using the command for all the processes (MQTT and smartjuicemaker)
