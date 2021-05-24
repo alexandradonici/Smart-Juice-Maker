@@ -1,6 +1,6 @@
 [
     {
-        "vitamin": "vitamin A",
+        "vitamin": "A",
         "fruits": [
             "mango",
             "cantaloupe",
@@ -15,7 +15,7 @@
         ]
     },
     {
-        "vitamin": "vitamin B1",
+        "vitamin": "B1",
         "fruits": [
             "tomatoes",
             "pineapple",
@@ -25,13 +25,13 @@
         ]
     },
     {
-        "vitamin": "vitamin B2",
+        "vitamin": "B2",
         "fruits": [
             "apple"
         ]
     },
     {
-        "vitamin": "vitamin C",
+        "vitamin": "C",
         "fruits": [
             "nectarine",
             "melon",
@@ -51,7 +51,7 @@
         ]
     },
     {
-        "vitamin": "vitamin K",
+        "vitamin": "K",
         "fruits": [
             "pear",
             "pomegranate",
@@ -76,7 +76,7 @@
         ]
     },
     {
-        "vitamin": "vitamin E",
+        "vitamin": "E",
         "fruits": [
             "mango",
             "apricot",
@@ -87,7 +87,7 @@
         ]
     },
     {
-        "vitamin": "vitamin B6",
+        "vitamin": "B6",
         "fruits": [
             "blueberries",
             "pinapple",
@@ -97,20 +97,20 @@
         ]
     },
     {
-        "vitamin": "vitamin K1",
+        "vitamin": "K1",
         "fruits": [
             "blueberries",
             "cranberries"
         ]
     },
     {
-        "vitamin": "vitamin B5",
+        "vitamin": "B5",
         "fruits": [
             "apricot"
         ]
     },
     {
-        "vitamin": "vitamin B9",
+        "vitamin": "B9",
         "fruits": [
             "strawberries"
         ]
