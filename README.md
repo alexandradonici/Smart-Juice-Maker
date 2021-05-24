@@ -73,10 +73,10 @@ Output format:
   "preparationDate": "2021-04-15.23:06:04",
   "quantity": 400.0,
   "vitamins": [
-    "vitamin C",
-    "vitamin K",
-    "vitamin E",
-    "vitamin B6"
+    "C",
+    "K",
+    "E",
+    "B6"
   ]
 }
 ```
@@ -87,7 +87,7 @@ localhost:9080/getFruitsByVitamins
 ```
 Input format:
 ```
-["vitamin A", "vitamin B"]
+["A", "B"]
 ```
 Output format:
 ```
@@ -129,9 +129,9 @@ Output format:
     "preparationDate": "2021-04-13.19:26:43",
     "quantity": 350.0,
     "vitamins": [
-      "vitamin A",
-      "vitamin C",
-      "vitamin B6"
+      "A",
+      "C",
+      "B6"
     ]
   },
   {
@@ -145,9 +145,9 @@ Output format:
     "preparationDate": "2021-04-13.19:38:56",
     "quantity": 350.0,
     "vitamins": [
-      "vitamin A",
-      "vitamin C",
-      "vitamin B6"
+      "A",
+      "C",
+      "B6"
     ]
   }
 ]
@@ -174,9 +174,9 @@ Output format:
   "preparationDate": "2021-04-13.19:26:43",
   "quantity": 350.0,
   "vitamins": [
-    "vitamin A",
-    "vitamin C",
-    "vitamin B6"
+    "A",
+    "C",
+    "B6"
   ]
 }
 ```
