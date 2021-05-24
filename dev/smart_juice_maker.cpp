@@ -24,7 +24,8 @@
 #include <time.h>
 #include <string>
 #include <signal.h>
-
+#include <mosquitto.h>
+#include "unistd.h"
 #include "models.cpp"
 #include "repository.cpp"
 
@@ -76,6 +77,9 @@ const time_t Helpers::getTimestampFromString(const string &dateTimeString) {
 
 namespace Generic
 {
+    const int HTTP = 0;
+    const int MQTT = 1;
+
     void handleReady(const Rest::Request &, Http::ResponseWriter response)
     {
         response.send(Http::Code::Ok, "UP\n");
@@ -114,10 +118,7 @@ namespace Generic
         return vitamins;
     }
 
-    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
-    {
-        // from client
-        auto clientJson = nlohmann::json::parse(request.body());
+    json createJuice(json clientJson, int reqType) {
         auto clientFruits = clientJson.get<vector<Fruit>>();
         auto fruitCalories = GetFruitCalories();
         auto juices = GetJuiceHistory();
@@ -131,6 +132,21 @@ namespace Generic
 
         for (auto clientFruit : clientFruits)
         {
+            if(clientFruit.getQuantity() < 0) 
+            {
+                if(reqType == HTTP) 
+                {
+                    ErrorHTTP error(Http::Code::Bad_Request, "The quantity must be positive!");
+                    json jsonErrorHttp(error);
+                    return jsonErrorHttp;
+                } else 
+                {
+                    ErrorMQTT error("The quantity must be positive!");
+                    json jsonError(error);
+                    return jsonError;
+                }
+            }
+            bool fruitInFile = false;
             for (auto fruitCal : fruitCalories)
             {
                 if (boost::iequals(clientFruit.getName(), fruitCal.getName()))
@@ -140,6 +156,21 @@ namespace Generic
                     newJuice.setFruits(fruits);
                     newJuice.setQuantity(newJuice.getQuantity() + clientFruit.getQuantity());
                     newJuice.setCalories(newJuice.getCalories() + (fruitCal.getCalories() * clientFruit.getQuantity()) / 100);
+                    fruitInFile = true; // Check if the fruit is in the calories database
+                }
+            }
+            if(!fruitInFile) 
+            {
+                if(reqType == HTTP) 
+                {
+                    ErrorHTTP error(Http::Code::Not_Found, "The fruit " + clientFruit.getName() + " cannot be found in the database!");
+                    json jsonErrorHttp(error);
+                    return jsonErrorHttp;
+                } else 
+                {
+                    ErrorMQTT error("The fruit " + clientFruit.getName() + " cannot be found in the database!");
+                    json jsonError(error);
+                    return jsonError;
                 }
             }
         }
@@ -150,7 +181,15 @@ namespace Generic
 
         json juice(newJuice);
         AddJuiceInHistory(juices, newJuice);
-       
+
+        return juice;
+    }
+
+    void makeJuice(const Rest::Request &request, Http::ResponseWriter response)
+    {
+        // from client
+        auto clientJson = nlohmann::json::parse(request.body());
+        json juice = createJuice(clientJson, Generic::HTTP);
         response.send(Http::Code::Ok, juice.dump());
     }
 
@@ -247,13 +286,24 @@ namespace Generic
         
         for (auto clientFruit : clientFruits) 
         {
+            if(clientFruit.getQuantity() < 0) 
+            {
+                response.send(Http::Code::Bad_Request, "The quantity must be positive!");   
+            }
+            bool fruitInFile = false;
             for (auto fruitCal : fruitCalories) 
             {
                 if (boost::iequals(clientFruit.getName(), fruitCal.getName()))
                 {
                     auto newCal = (clientFruit.getQuantity() * fruitCal.getCalories()) / 100;
                     calSum += newCal;
+                    fruitInFile = true; // Check if the fruit is in the calories database
                 }
+            }
+            if(!fruitInFile) 
+            {
+                response.send(Http::Code::Not_Found, "The fruit " + clientFruit.getName() + 
+                                                    " cannot be found in the database!");                 
             }
         }
 
@@ -381,11 +431,38 @@ int main(int argc, char *argv[])
     stats.init(thr);
     stats.start();
 
+    struct mosquitto *mosq;
+    // Fork so we'll have 2 processes: one for http requests and for mqtt
+    int pid = fork();
+    if(pid == 0) {
+        
+        mosquitto_lib_init();
+
+        mosq = mosquitto_new("publisher", true, NULL);
+        int rc = mosquitto_connect(mosq, "localhost", 1883, 60);
+        if(rc != 0)
+        {
+            printf("\nError with code = %d\n", rc);
+            mosquitto_destroy(mosq);
+            return -1;
+        }
+        while(1)
+        {
+            json juice = Generic::createJuice(GetCurrentFruits(), Generic::MQTT);
+            string stringJuice = juice.dump();
+            mosquitto_publish(mosq, NULL, "mqtt", stringJuice.size(), stringJuice.c_str(), 0, false);
+            sleep(20);
+        }
+    }
+
     // Code that waits for the shutdown sinal for the server
     int signal = 0;
     int status = sigwait(&signals, &signal);
     if (status == 0)
     {
+        mosquitto_disconnect(mosq);
+        mosquitto_lib_cleanup();
+        mosquitto_destroy(mosq);
         cout << "received signal " << signal << endl;
     }
     else

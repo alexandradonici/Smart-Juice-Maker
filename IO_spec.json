@@ -1,0 +1,465 @@
+{
+    "device-name": "Smart Juice Maker",
+    "device-type": "Juice Maker",
+    "buffers-count": 2,
+    "input-buffers": {
+        "1": {
+            "token-delimitators": ",",
+            "protocol": "MQTT",
+            "body-type": "json",
+            "topic": "mqtt",
+            "message-type": "subscriber",
+            "buffer-tokens": {
+                "name": "makeJuice",
+                "description": "Make a juice with the given fruits",
+                "token-type": "json",
+                "optional": false,
+                "body": {
+                    "token-type": "array",
+                    "value": [
+                        {
+                            "name": "fruit",
+                            "description": "Fruit name",
+                            "token-type": "string",
+                            "byte-size": 20,
+                            "regex-rule": "[a-z]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "quantity",
+                            "description": "Fruit quantity",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9][0-9]*.[0-9]*",
+                            "optional": false
+                        }
+                    ]
+                }
+            }
+        },
+        "2": {
+            "token-delimitators": ",",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getFruitsByVitamins",
+                "description": "See a list of fruits for each vitamin",
+                "token-type": "json",
+                "optional": false,
+                "body": {
+                    "token-type": "array",
+                    "value": {
+                        "description": "Fruit vitamin",
+                        "token-type": "string",
+                        "byte-size": 10,
+                        "regex-rule": "[a-z]*",
+                        "optional": false
+                    }
+                }
+            }
+        },
+        "3": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getJuicesBetweenDates",
+                "description": "See all the juices between two given dates",
+                "token-type": "string",
+                "optional": false,
+                "body": [
+                    {
+                        "name": "dateFrom",
+                        "description": "Starting date for the made juices interval",
+                        "token-type": "string",
+                        "byte-size": 19,
+                        "regex-rule": "\\d{4}-\\d{2}-\\d{2}\\d{2}:\\d{2}:\\d{2}",
+                        "optional": false
+                    },
+                    {
+                        "name": "dateTo",
+                        "description": "Ending date for the made juices interval",
+                        "token-type": "string",
+                        "byte-size": 19,
+                        "regex-rule": "\\d{4}-\\d{2}-\\d{2}\\d{2}:\\d{2}:\\d{2}",
+                        "optional": false
+                    }
+                ]
+            }
+        },
+        "4": {
+            "token-delimitators": ",",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XGET 'http://127.0.0.1:9080'",
+            "buffer-tokens": [
+                {
+                    "name": "getJuiceByIdentifier",
+                    "description": "Get a juice by identifier.",
+                    "token-type": "json",
+                    "optional": false,
+                    "body": {
+                        "name": "identifier",
+                        "description": "The id of a juice",
+                        "token-type": "unsigned integer",
+                        "byte-size": 4,
+                        "regex-rule": "[1-9][0-9]*",
+                        "optional": false
+                    }
+                }
+            ]
+        },
+        "5": {
+            "token-delimitators": ",",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getQuantitiesByCaloriesAndFruits",
+                "description": "Return the quantity of each fruit depending on the total number of calories.",
+                "token-type": "json",
+                "optional": false,
+                "body": [
+                    {
+                        "name": "calories",
+                        "description": "The desired number of calories",
+                        "token-type": "int",
+                        "byte-size": 4,
+                        "regex-rule": "\\d+",
+                        "optional": false
+                    },
+                    {
+                        "name": "fruits",
+                        "description": "The list of fruits",
+                        "token-type": "array",
+                        "value": [
+                            {
+                                "name": "fruit",
+                                "description": "Fruit name",
+                                "token-type": "string",
+                                "byte-size": 20,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            },
+                            {
+                                "name": "quantity",
+                                "description": "Fruit quantity",
+                                "token-type": "float",
+                                "byte-size": 4,
+                                "regex-rule": "[1-9][0-9]*.[0-9]*",
+                                "optional": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            "6": {
+                "token-delimitators": ",",
+                "protocol": "HTTP",
+                "body-type": "json",
+                "buffer-tokens": {
+                    "name": "makeJuice",
+                    "description": "Make a juice with the given fruits",
+                    "token-type": "json",
+                    "optional": false,
+                    "body": {
+                        "token-type": "array",
+                        "value": [
+                            {
+                                "name": "fruit",
+                                "description": "Fruit name",
+                                "token-type": "string",
+                                "byte-size": 20,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            },
+                            {
+                                "name": "quantity",
+                                "description": "Fruit quantity",
+                                "token-type": "float",
+                                "byte-size": 4,
+                                "regex-rule": "[1-9][0-9]*.[0-9]*",
+                                "optional": false
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "output-buffers": {
+        "1": {
+            "token-delimitators": "",
+            "protocol": "MQTT",
+            "body-type": "subscriber",
+            "buffer-tokens": {
+                "name": "makeJuice",
+                "description": "",
+                "token-type": "json",
+                "optional": false,
+                "body": {
+                    "token-type": "json",
+                    "value": [
+                        {
+                            "name": "calories",
+                            "description": "Calories for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "fruits",
+                            "description": "Fruits that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        },
+                        {
+                            "name": "identifier",
+                            "description": "Identifier for the new juice",
+                            "token-type": "usigned interger",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "preparationDate",
+                            "description": "Preparation date for the new juice",
+                            "token-type": "string",
+                            "byte-size": 19,
+                            "regex-rule": "\\d{4}-\\d{2}-\\d{2}\\d{2}:\\d{2}:\\d{2}",
+                            "optional": false
+                        },
+                        {
+                            "name": "quantity",
+                            "description": "Quantity for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "vitamins",
+                            "description": "Vitamins that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "2": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:8080/'",
+            "buffer-tokens": {
+                "name": "getFruitsByVitamins",
+                "description": "See a list of fruits for each vitamin",
+                "token-type": "json",
+                "optional": false,
+                "body": {
+                    "token-type": "array",
+                    "value": {
+                        "description": "Fruits that have the given vitamins",
+                        "token-type": "string",
+                        "byte-size": 10,
+                        "regex-rule": "[a-z]*",
+                        "optional": false
+                    }
+                }
+            }
+        },
+        "3": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getJuicesBetweenDates",
+                "description": "See all the juices between two given dates",
+                "token-type": "string",
+                "optional": false,
+                "body": {
+                    "token-type": "array",
+                    "value": [
+                        {
+                            "name": "calories",
+                            "description": "Calories for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "fruits",
+                            "description": "Fruits that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        },
+                        {
+                            "name": "identifier",
+                            "description": "Identifier for the new juice",
+                            "token-type": "usigned interger",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "preparationDate",
+                            "description": "Preparation date for the new juice",
+                            "token-type": "string",
+                            "byte-size": 19,
+                            "regex-rule": "\\d{4}-\\d{2}-\\d{2}\\d{2}:\\d{2}:\\d{2}",
+                            "optional": false
+                        },
+                        {
+                            "name": "quantity",
+                            "description": "Quantity for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "vitamins",
+                            "description": "Vitamins that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "4": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XGET 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getJuiceByIdentifier",
+                "description": "Get a juice by identifier",
+                "token-type": "json",
+                "optional": false,
+                "body": {
+                    "token-type": "json",
+                    "body": [
+                        {
+                            "name": "calories",
+                            "description": "Calories for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "fruits",
+                            "description": "Fruits that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        },
+                        {
+                            "name": "identifier",
+                            "description": "Identifier for the new juice",
+                            "token-type": "usigned interger",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "preparationDate",
+                            "description": "Preparation date for the new juice",
+                            "token-type": "string",
+                            "byte-size": 19,
+                            "regex-rule": "\\d{4}-\\d{2}-\\d{2}\\d{2}:\\d{2}:\\d{2}",
+                            "optional": false
+                        },
+                        {
+                            "name": "quantity",
+                            "description": "Quantity for the new juice",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]{1}[0-9]*.[0-9]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "vitamins",
+                            "description": "Vitamins that made up the new juice",
+                            "token-type": "array",
+                            "value": {
+                                "description": "Fruit vitamin",
+                                "token-type": "string",
+                                "byte-size": 10,
+                                "regex-rule": "[a-z]*",
+                                "optional": false
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        "5": {
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "body-type": "json",
+            "prefix": "curl -XPOST 'http://127.0.0.1:9080'",
+            "buffer-tokens": {
+                "name": "getQuantitiesByCaloriesAndFruits",
+                "description": "See the quantity of each fruit to make up a juice given a ist of fruits and its total calories",
+                "optional": false,
+                "body": {
+                    "token-type": "array",
+                    "value": [
+                        {
+                            "name": "fruit",
+                            "description": "Fruit ",
+                            "token-type": "string",
+                            "byte-size": 10,
+                            "regex-rule": "[a-z]*",
+                            "optional": false
+                        },
+                        {
+                            "name": "quantity",
+                            "description": "Quantity for the given fruit",
+                            "token-type": "float",
+                            "byte-size": 4,
+                            "regex-rule": "[1-9]*.[0-9]*"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -28,7 +28,12 @@ sudo apt-get install libboost-dev
 
 ### Compile the file
 ```
- g++ smart_juice_maker.cpp -o smartjuicemaker -lpistache -lcrypto -lssl -lpthread -std=c++17
+ g++ smart_juice_maker.cpp -o smartjuicemaker -lpistache -lmosquitto -lcrypto -lssl -lpthread -std=c++17
+```
+
+### Start de MQTT process - check the bottom spec if not working
+```
+mosquitto -v
 ```
 
 ### Run the file
@@ -36,9 +41,14 @@ sudo apt-get install libboost-dev
  ./smartjuicemaker
  ```
 
+### Subscribe to topic
+```
+mosquitto_sub -t mqtt
+```
+
 ## Features
 
-1. ### Get a juice based on a list of fruits
+1. ### Get a juice based on a list of fruits (HTTP and MQTT)
 ```
 http://localhost:9080/makeJuice
 ```
@@ -63,10 +73,10 @@ Output format:
   "preparationDate": "2021-04-15.23:06:04",
   "quantity": 400.0,
   "vitamins": [
-    "vitamin C",
-    "vitamin K",
-    "vitamin E",
-    "vitamin B6"
+    "C",
+    "K",
+    "E",
+    "B6"
   ]
 }
 ```
@@ -77,7 +87,7 @@ localhost:9080/getFruitsByVitamins
 ```
 Input format:
 ```
-["vitamin A", "vitamin B"]
+["A", "B"]
 ```
 Output format:
 ```
@@ -119,9 +129,9 @@ Output format:
     "preparationDate": "2021-04-13.19:26:43",
     "quantity": 350.0,
     "vitamins": [
-      "vitamin A",
-      "vitamin C",
-      "vitamin B6"
+      "A",
+      "C",
+      "B6"
     ]
   },
   {
@@ -135,9 +145,9 @@ Output format:
     "preparationDate": "2021-04-13.19:38:56",
     "quantity": 350.0,
     "vitamins": [
-      "vitamin A",
-      "vitamin C",
-      "vitamin B6"
+      "A",
+      "C",
+      "B6"
     ]
   }
 ]
@@ -164,9 +174,9 @@ Output format:
   "preparationDate": "2021-04-13.19:26:43",
   "quantity": 350.0,
   "vitamins": [
-    "vitamin A",
-    "vitamin C",
-    "vitamin B6"
+    "A",
+    "C",
+    "B6"
   ]
 }
 ```
@@ -201,3 +211,25 @@ Output format:
 ]
 ```
 
+### Process not closed or killing a process
+Sometimes, the MQTT process is already running, so you need to kill it by yourself.
+```
+sudo pkill mosquitto
+```
+When running the program and receiving an error, check if the process is not already running:
+```
+ps -U <username> -au
+```
+or do it by checking if the port is not already busy
+```
+sudo netstat -lpn | grep :1883
+```
+Check for the smartjuicemaker process and kill it:
+```
+sudo kill -9 <pid>
+```
+### Closing the program
+When closing the program, you should do it by using the command for all the processes (MQTT and smartjuicemaker)
+```
+sudo kill -9 <pid>
+```
